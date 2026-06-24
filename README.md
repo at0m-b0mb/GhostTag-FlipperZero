@@ -7,6 +7,10 @@
 <p align="center"><i>Hunt the tags that haunt you.</i></p>
 
 <p align="center">
+  <a href="https://github.com/at0m-b0mb/GhostTag-FlipperZero/actions/workflows/build.yml"><img src="https://github.com/at0m-b0mb/GhostTag-FlipperZero/actions/workflows/build.yml/badge.svg" alt="Build FAP"></a>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/platform-Flipper%20Zero-FF7800?style=for-the-badge&logo=flipper&logoColor=white" alt="Flipper Zero">
   <img src="https://img.shields.io/badge/radio-ESP32%20WiFi%2FBLE%20board-19f7a3?style=for-the-badge" alt="ESP32">
   <img src="https://img.shields.io/badge/build-ufbt-2da0ff?style=for-the-badge" alt="ufbt">
