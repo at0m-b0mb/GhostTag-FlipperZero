@@ -100,10 +100,10 @@ void ghosttag_source_start(GhostTagApp* app, GhostTagSource source) {
         demo_source_start(app->demo);
     } else if(source == GhostTagSourceEsp32) {
         uart_link_start(app->uart);
-        uart_link_send_command(app->uart, "START\n");
-        /* A board that booted before the app opened has already sent its
-         * GTHELLO into the void, so ask for one. */
-        uart_link_send_command(app->uart, "PING\n");
+        /* Starts the scan and asks for a greeting - a board that booted before
+         * the app opened has already sent its GTHELLO into the void. Speaks to
+         * both the GhostTag sketch and an unmodified GhostESP board. */
+        uart_link_begin_hunt(app->uart);
         /* Only a real hunt is ever written down. */
         if(app->settings.log_session) session_log_begin(app->log);
     }
@@ -114,7 +114,7 @@ void ghosttag_source_start(GhostTagApp* app, GhostTagSource source) {
 void ghosttag_source_stop(GhostTagApp* app) {
     furi_assert(app);
     if(uart_link_is_running(app->uart)) {
-        uart_link_send_command(app->uart, "STOP\n");
+        uart_link_end_hunt(app->uart);
         uart_link_stop(app->uart);
     }
     demo_source_stop(app->demo);
@@ -172,6 +172,9 @@ static bool ghosttag_back_event_callback(void* context) {
 
 static void ghosttag_tick_event_callback(void* context) {
     GhostTagApp* app = context;
+    /* Every screen, not just the radar: the GhostESP heartbeat and the pin
+     * probe must keep running while the user reads a detail or an alert. */
+    if(app->source == GhostTagSourceEsp32) uart_link_tick(app->uart);
     scene_manager_handle_tick_event(app->scene_manager);
 }
 

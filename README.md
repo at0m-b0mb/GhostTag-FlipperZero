@@ -23,6 +23,15 @@ is in range at the station, still in range at the shops, and still in range
 outside your front door. That is the only thing GhostTag grades, and it is
 careful never to claim more than it measured.
 
+> **New: works with GhostESP boards, no flashing needed.**
+> If your board already runs [GhostESP: Revival](https://github.com/GhostESP-Revival/GhostESP),
+> such as the **Rabbit-Labs Poltergeist**, GhostTag now uses it as-is: it starts
+> GhostESP's own AirTag scanner and reads the results, so you keep GhostESP and
+> all its features. No settings to change, and the UART pins (13/14 or 15/16)
+> are found automatically. In this mode GhostTag detects AirTags / Find My
+> only. Tested on a Rabbit-Labs Poltergeist with GhostESP 2.2 and Momentum.
+> Details: [Already running GhostESP?](#already-running-ghostesp-no-flashing-needed)
+
 ---
 
 ## Two ways to run it
@@ -30,6 +39,7 @@ careful never to claim more than it measured.
 |  | What it needs | What it does |
 |---|---|---|
 | 🛰️ **Hunt** | Flipper + a **BLE-capable ESP32** | The real thing. Identifies AirTags, Tiles, SmartTags and Chipolos, tracks each one over time, and alerts when one travels with you. |
+| 👻🛰️ **Hunt on GhostESP** | Flipper + a board **already running [GhostESP: Revival](https://github.com/GhostESP-Revival/GhostESP)** | The same hunt and the same alerts, with **nothing flashed** — GhostTag drives GhostESP's own AirTag scanner. AirTags / Find My only; see [below](#already-running-ghostesp-no-flashing-needed). |
 | 👻 **Demo** | **Nothing at all** | A scripted stalking scenario played through the real UI, so you can see exactly what an alert looks like before buying any hardware. Every screen is stamped `DEMO`, and a demo session is never written to the log. |
 
 > **Why isn't there an onboard-only detection mode?** Because the radio cannot
@@ -77,6 +87,40 @@ binary that flashes perfectly and then finds nothing forever.
 
 **Plain dev boards** wired to the GPIO also work: Seeed XIAO ESP32C3/S3,
 ESP32-C3-DevKitM-1, ESP32-S3-DevKitC-1, any ESP32-WROOM-32 board.
+
+### Already running GhostESP? No flashing needed
+
+If your board runs [GhostESP: Revival](https://github.com/GhostESP-Revival/GhostESP)
+— for example the **Rabbit-Labs Poltergeist** (ESP32-C5), or any GhostESP build
+on a BLE-capable chip — leave it as it is. Close the GhostESP app on the
+Flipper, open GhostTag, and start a hunt.
+
+GhostTag sends GhostESP the same console commands you would type yourself
+(`blescan -a` to start its AirTag scanner, `blescan -s` to stop it) and reads
+the sightings out of its console output. GhostESP repeats each tag it can still
+hear at most every five seconds, which is exactly the "still in range" signal
+the dwell heuristic needs, so alerts behave the same as with the sketch.
+
+What is different in this mode:
+
+- **AirTags / Find My only.** GhostESP's continuous scanner is AirTag-only and
+  matches the long, *separated* Find My advertisement. Tiles, SmartTags and
+  Chipolos need the GhostTag sketch.
+- **Every sighting is graded "separated".** GhostESP's scanner matches only
+  the long Find My advertisement, so owner-nearby tags are not reported at
+  all. It does not hand over the raw advertisement either, so GhostTag cannot
+  re-check it; another Apple device that happens to send a 31-byte
+  advertisement may occasionally show up as an AirTag.
+- The heartbeat is an `echo GTALIVE` that GhostTag asks for every two seconds,
+  because GhostESP has no heartbeat of its own and is silent in a room with no
+  tags.
+
+Tested on a Rabbit-Labs Poltergeist with GhostESP 2.2 and Momentum firmware.
+
+Nothing has to be chosen in Settings: the same start sequence talks to both
+kinds of board, and each ignores the other's commands. Until the board has said
+anything, GhostTag also alternates between pins `13/14` and `15/16`, since
+boards differ in which Flipper UART they are wired to.
 
 ### Wiring a plain board
 
@@ -288,6 +332,14 @@ Flipper → ESP32  :  START    STOP    PING
 ```
 
 Plain ASCII on purpose — you can watch it in any serial monitor while debugging.
+
+On a GhostESP board the Flipper sends `blescan -s`, `blescan -a`,
+`echo GTHELLO,GhostESP` and `echo GTALIVE` alongside the commands above, and
+[`helpers/ghostesp_parse.c`](helpers/ghostesp_parse.c) turns GhostESP's console
+lines (`[0] AirTag RSSI Update: -58 dBm …` / `MAC: …`) into the same
+detections a `GT1` line carries. It is free of Flipper dependencies and
+host-tested against GhostESP's real output format in
+[`test/test_ghostesp_parse.c`](test/test_ghostesp_parse.c).
 
 ---
 

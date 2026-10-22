@@ -50,6 +50,21 @@ bool uart_link_is_running(UartLink* link);
 void uart_link_send_command(UartLink* link, const char* cmd);
 
 /**
+ * Start / stop scanning on whatever board is attached. Works with the GhostTag
+ * companion sketch AND with a board running GhostESP: Revival (e.g. the
+ * Rabbit-Labs Poltergeist), with nothing flashed onto it.
+ */
+void uart_link_begin_hunt(UartLink* link);
+void uart_link_end_hunt(UartLink* link);
+
+/**
+ * Housekeeping, call regularly from the GUI thread: sends the GhostESP
+ * heartbeat request and, until the board has said anything, alternates between
+ * the 13/14 and 15/16 UART pins.
+ */
+void uart_link_tick(UartLink* link);
+
+/**
  * Tick of the last COMPLETE line received from the board, of any kind.
  *
  * Counting any line rather than only detections is what makes the link

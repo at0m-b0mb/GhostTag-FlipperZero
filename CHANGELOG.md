@@ -3,6 +3,23 @@
 All notable changes to GhostTag are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- **GhostESP support, with nothing flashed.** A board already running
+  GhostESP: Revival (e.g. the Rabbit-Labs Poltergeist, ESP32-C5) now works as
+  the hunt radio. GhostTag drives GhostESP's AirTag scanner over the console
+  (`blescan -a` / `blescan -s`) and parses its output in the new
+  `helpers/ghostesp_parse.c`. AirTags / Find My only in this mode.
+- The start/stop sequence talks to both the GhostTag sketch and GhostESP; each
+  ignores the other's commands, so there is no setting to choose.
+- `echo GTALIVE` heartbeat request every 2 s, so a GhostESP board in a quiet
+  room reads as live instead of `NO BOARD`.
+- Until the board has said anything, the link alternates between the
+  `13/14` (USART) and `15/16` (LPUART) pins.
+- `test/test_ghostesp_parse.c` host test, run in CI under ASan/UBSan.
+
 ## [2.0.0] — 2026-09-27
 
 A correctness and usability release. Every screen was rebuilt, two deadlock
